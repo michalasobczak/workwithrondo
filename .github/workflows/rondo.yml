@@ -1,0 +1,86 @@
+# Rondo — skan obecności artefaktów CDD (README, CHANGELOG, specy, testy) w GitHub Actions; wynik w logu
+# i w panelu Rondo (https://app.workwithrondo.com). Odpowiednik szablonów GitLab CI z rondo-platform (spec 0012).
+#
+# Użycie w projekcie (.github/workflows/rondo.yml):
+#   name: Rondo
+#   on: [push, pull_request]
+#   jobs:
+#     rondo:
+#       uses: michalasobczak/workwithrondo/.github/workflows/rondo.yml@v1
+#       secrets: inherit
+#
+# Sekrety repozytorium (panel Rondo → klient → licencja):
+#   RONDO_DOCKER_AUTH_CONFIG — pobranie obrazu z registry.workwithrondo.com (robot tylko do odczytu)
+#   RONDO_LICENSE            — token licencji; wysyłka wyniku do panelu
+# Bez sekretów (np. pull request z forka) job kończy się ostrzeżeniem, bez błędu.
+# Wyłączenie: zmienna repozytorium RONDO_DISABLED = true.
+#
+# Bezpieczeństwo: tylko odczyt kodu; logowanie do rejestru w katalogu tymczasowym, usuwanym po skanie; kontener
+# jako zwykły użytkownik (65532), repo tylko do odczytu, skan bez sieci — sieć wyłącznie przy wysyłce wyniku.
+name: Rondo
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: Obraz CLI rondo
+        type: string
+        default: registry.workwithrondo.com/rondo/rondo:0.3
+
+permissions:
+  contents: read
+
+jobs:
+  rondo:
+    name: rondo
+    if: vars.RONDO_DISABLED != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true # nigdy nie blokuje pipeline'u; braki artefaktów to obserwacja, nie błąd
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Skan Rondo
+        env:
+          RONDO_IMAGE: ${{ inputs.image }}
+          RONDO_DOCKER_AUTH_CONFIG: ${{ secrets.RONDO_DOCKER_AUTH_CONFIG }}
+          RONDO_LICENSE: ${{ secrets.RONDO_LICENSE }}
+        run: |
+          set -eu
+          if [ -z "$RONDO_DOCKER_AUTH_CONFIG" ]; then
+            echo "::warning title=Rondo::brak sekretu RONDO_DOCKER_AUTH_CONFIG (panel Rondo, strona licencji) — skan pominięty"
+            exit 0
+          fi
+          RONDO_DOCKER_CONFIG="$(mktemp -d)"
+          trap 'rm -rf "$RONDO_DOCKER_CONFIG"' EXIT
+          printf '%s' "$RONDO_DOCKER_AUTH_CONFIG" > "$RONDO_DOCKER_CONFIG/config.json"
+          docker --config "$RONDO_DOCKER_CONFIG" pull -q "$RONDO_IMAGE" >/dev/null
+          run_rondo() { docker run --rm --user 65532:65532 --network none -v "$GITHUB_WORKSPACE:/repo:ro" "$RONDO_IMAGE" rondo "$@"; }
+          run_rondo version
+          run_rondo scan /repo
+          run_rondo scan --json /repo > "$RUNNER_TEMP/rondo-scan.json"
+          if [ -z "$RONDO_LICENSE" ]; then
+            echo "::warning title=Rondo::brak sekretu RONDO_LICENSE — wynik tylko w logu, nie trafił do panelu"
+            exit 0
+          fi
+          code=0
+          docker run --rm --user 65532:65532 -v "$GITHUB_WORKSPACE:/repo:ro" \
+            -e RONDO_LICENSE -e RONDO_API_URL -e GITHUB_ACTIONS -e GITHUB_SERVER_URL -e GITHUB_REPOSITORY \
+            -e GITHUB_REPOSITORY_ID -e GITHUB_REF -e GITHUB_REF_NAME -e GITHUB_HEAD_REF -e GITHUB_SHA -e GITHUB_RUN_ID \
+            "$RONDO_IMAGE" rondo scan --send /repo > /dev/null || code=$?
+          if [ "$code" = 3 ]; then
+            echo "::warning title=Rondo::skan wykonany, ale wynik nie trafił do panelu — powód wyżej w logu"
+          fi
+          exit "$code"
+
+      - name: Artefakt rondo-scan.json
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rondo-scan
+          path: ${{ runner.temp }}/rondo-scan.json
+          if-no-files-found: ignore
+          retention-days: 30

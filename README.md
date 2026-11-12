@@ -1,8 +1,8 @@
 # workwithrondo
 
-Rondo w GitHub Actions i GitLab CI. Sekrety / zmienne i gotowy fragment konfiguracji — w panelu Rondo, strona licencji.
+Rondo for GitHub Actions and GitLab CI. Secrets, variables and ready-to-paste config are in the Rondo panel (license page).
 
-GitHub — `.github/workflows/rondo.yml`:
+GitHub, `.github/workflows/rondo.yml`:
 
 ```yaml
 name: Rondo
@@ -13,11 +13,11 @@ jobs:
     secrets: inherit
 ```
 
-GitLab — `.gitlab-ci.yml` (runner shell: `rondo.shell.gitlab-ci.yml`):
+GitLab, `.gitlab-ci.yml` (shell executor: `rondo.shell.gitlab-ci.yml`):
 
 ```yaml
 include:
   - remote: 'https://raw.githubusercontent.com/michalasobczak/workwithrondo/v1/gitlab/rondo.gitlab-ci.yml'
 ```
 
-Job nie blokuje pipeline'u. Wyłączenie: zmienna `RONDO_DISABLED` = `true`.
+The job never blocks the pipeline. Disable it with `RONDO_DISABLED` = `true`.

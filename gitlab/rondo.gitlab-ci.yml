@@ -1,19 +1,11 @@
-# Rondo w GitLab CI — skan obecności artefaktów CDD: README, CHANGELOG, specy, testy; wynik w logu joba i w panelu
-# Rondo. Runner z executorem docker; dla executora shell: rondo.shell.gitlab-ci.yml.
+# Rondo for GitLab CI (docker executor). Scans for README, CHANGELOG, specs and tests; results go to the job log
+# and the Rondo panel. Shell executor: rondo.shell.gitlab-ci.yml.
 #
-# Instalacja (panel Rondo → licencja → GitLab):
-#   1. Zmienna CI RONDO_LICENSE (Masked) — token licencji.
-#   2. Zmienna CI DOCKER_AUTH_CONFIG — pobranie obrazu (GitLab nie zamaskuje JSON-a).
-#   3. W .gitlab-ci.yml projektu:
-#        include:
-#          - remote: 'https://raw.githubusercontent.com/michalasobczak/workwithrondo/v1/gitlab/rondo.gitlab-ci.yml'
+# Setup: CI/CD variables RONDO_LICENSE (masked) and DOCKER_AUTH_CONFIG from the Rondo panel, then:
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/michalasobczak/workwithrondo/v1/gitlab/rondo.gitlab-ci.yml'
 #
-# GitLab pobiera ten plik przy tworzeniu pipeline'u — gdy GitHub nie odpowiada, pipeline nie powstanie.
-# Wyłączenie w projekcie: zmienna RONDO_DISABLED = "true". Job nigdy nie blokuje pipeline (allow_failure);
-# braki artefaktów to obserwacja, nie błąd.
-# Checki AI: zmienna CI RONDO_AI_TOKEN (klucz klienta u dostawcy, Masked); dostawca, model i prompty z panelu Rondo.
-# Do panelu trafia tylko zaliczony / niezaliczony, uzasadnienia w logu joba.
-# Kod 3 (job żółty): skan wykonany, ale wynik nie trafił do panelu — powód w logu.
+# Never blocks the pipeline. Disable with RONDO_DISABLED = "true". Optional AI checks: RONDO_AI_TOKEN.
 
 rondo:
   stage: .pre

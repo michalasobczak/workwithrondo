@@ -1,17 +1,13 @@
-# Rondo w GitLab CI — wariant dla runnera z executorem shell (runner musi mieć docker). Ten sam skan co
-# rondo.gitlab-ci.yml: obecność README, CHANGELOG, speców i testów; wynik w logu i w panelu Rondo.
+# Rondo for GitLab CI (shell executor with docker). Same scan as rondo.gitlab-ci.yml.
 #
-# Instalacja (panel Rondo → licencja → GitLab): zmienne CI RONDO_LICENSE i DOCKER_AUTH_CONFIG, a w .gitlab-ci.yml:
+# Setup: CI/CD variables RONDO_LICENSE (masked) and DOCKER_AUTH_CONFIG from the Rondo panel, then:
 #   include:
 #     - remote: 'https://raw.githubusercontent.com/michalasobczak/workwithrondo/v1/gitlab/rondo.shell.gitlab-ci.yml'
-# Tagi runnera: przez `default: tags` projektu albo nadpisanie joba `rondo: { tags: [...] }`.
+# Runner tags: project `default: tags` or override `rondo: { tags: [...] }`.
 #
-# Logowanie do Harbora tylko na czas joba: DOCKER_AUTH_CONFIG trafia do tymczasowego DOCKER_CONFIG,
-# usuwanego po skanie; konfiguracja dockera użytkownika runnera nie jest zmieniana.
-# Kontener: bez roota (65532), repo zamontowane tylko do odczytu; sieć tylko przy wysyłce wyniku.
-# Checki AI: RONDO_AI_TOKEN (klucz klienta u dostawcy); dostawca, model i prompty z panelu Rondo.
-# Kod 3 (job żółty): skan wykonany, ale wynik nie trafił do panelu — powód w logu.
-# Wyłączenie w projekcie: zmienna RONDO_DISABLED = "true". Job nigdy nie blokuje pipeline (allow_failure).
+# Registry login lives in a temporary DOCKER_CONFIG, removed after the scan. The container runs as non-root (65532)
+# with the repo mounted read-only and no network, except when sending the result.
+# Never blocks the pipeline. Disable with RONDO_DISABLED = "true". Optional AI checks: RONDO_AI_TOKEN.
 
 rondo:
   stage: .pre
@@ -23,7 +19,7 @@ rondo:
   script:
     - |
       set -eu
-      if [ -z "${DOCKER_AUTH_CONFIG:-}" ]; then echo "rondo: brak zmiennej DOCKER_AUTH_CONFIG (panel Rondo, strona licencji)"; exit 1; fi
+      if [ -z "${DOCKER_AUTH_CONFIG:-}" ]; then echo "rondo: DOCKER_AUTH_CONFIG is not set (Rondo panel, license page)"; exit 1; fi
       RONDO_DOCKER_CONFIG="$(mktemp -d)"
       trap 'rm -rf "$RONDO_DOCKER_CONFIG"' EXIT
       printf '%s' "$DOCKER_AUTH_CONFIG" > "$RONDO_DOCKER_CONFIG/config.json"

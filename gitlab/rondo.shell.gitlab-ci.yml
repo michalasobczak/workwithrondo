@@ -1,0 +1,45 @@
+# Rondo w GitLab CI — wariant dla runnera z executorem shell (runner musi mieć docker). Ten sam skan co
+# rondo.gitlab-ci.yml: obecność README, CHANGELOG, speców i testów; wynik w logu i w panelu Rondo.
+#
+# Instalacja (panel Rondo → licencja → GitLab): zmienne CI RONDO_LICENSE i DOCKER_AUTH_CONFIG, a w .gitlab-ci.yml:
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/michalasobczak/workwithrondo/v1/gitlab/rondo.shell.gitlab-ci.yml'
+# Tagi runnera: przez `default: tags` projektu albo nadpisanie joba `rondo: { tags: [...] }`.
+#
+# Logowanie do Harbora tylko na czas joba: DOCKER_AUTH_CONFIG trafia do tymczasowego DOCKER_CONFIG,
+# usuwanego po skanie; konfiguracja dockera użytkownika runnera nie jest zmieniana.
+# Kontener: bez roota (65532), repo zamontowane tylko do odczytu; sieć tylko przy wysyłce wyniku (api.workwithrondo.com).
+# Checki AI: RONDO_AI_TOKEN (klucz klienta u dostawcy); dostawca, model i prompty z panelu Rondo.
+# Kod 3 (job żółty): skan wykonany, ale wynik nie trafił do panelu — powód w logu.
+# Wyłączenie w projekcie: zmienna RONDO_DISABLED = "true". Job nigdy nie blokuje pipeline (allow_failure).
+
+rondo:
+  stage: .pre
+  needs: []
+  allow_failure: true
+  variables:
+    GIT_DEPTH: "1"
+    RONDO_IMAGE: registry.workwithrondo.com/rondo/rondo:0.5
+  script:
+    - |
+      set -eu
+      if [ -z "${DOCKER_AUTH_CONFIG:-}" ]; then echo "rondo: brak zmiennej DOCKER_AUTH_CONFIG (panel Rondo, strona licencji)"; exit 1; fi
+      RONDO_DOCKER_CONFIG="$(mktemp -d)"
+      trap 'rm -rf "$RONDO_DOCKER_CONFIG"' EXIT
+      printf '%s' "$DOCKER_AUTH_CONFIG" > "$RONDO_DOCKER_CONFIG/config.json"
+      docker --config "$RONDO_DOCKER_CONFIG" pull -q "$RONDO_IMAGE" >/dev/null
+      run_rondo() { docker run --rm --user 65532:65532 --network none -v "$CI_PROJECT_DIR:/repo:ro" "$RONDO_IMAGE" rondo "$@"; }
+      run_rondo version
+      run_rondo scan --json /repo > rondo-scan.json
+      docker run --rm --user 65532:65532 -v "$CI_PROJECT_DIR:/repo:ro" \
+        -e RONDO_LICENSE -e RONDO_API_URL -e RONDO_AI_TOKEN -e RONDO_AI_PROVIDER -e RONDO_AI_MODEL -e RONDO_AI_URL -e CI_SERVER_URL -e CI_PROJECT_ID -e CI_PROJECT_NAMESPACE -e CI_PROJECT_PATH \
+        -e CI_COMMIT_REF_NAME -e CI_COMMIT_SHA -e CI_PIPELINE_ID -e CI_JOB_URL -e CI_MERGE_REQUEST_IID \
+        "$RONDO_IMAGE" rondo scan --send /repo
+  artifacts:
+    when: always
+    paths: [rondo-scan.json]
+    expire_in: 30 days
+  rules:
+    - if: $RONDO_DISABLED == "true"
+      when: never
+    - when: always

@@ -1,9 +1,9 @@
-# workwithrondo — Rondo w GitHub Actions
+# workwithrondo — Rondo w GitHub Actions i GitLab CI
 
-Workflow do dołączenia w projektach na GitHubie: skan obecności artefaktów [Rondo/CDD](https://workwithrondo.com)
+Workflow i szablony CI do dołączenia w projektach na GitHubie i w GitLabie: skan obecności artefaktów [Rondo/CDD](https://workwithrondo.com)
 — README, CHANGELOG, specy, testy — z wynikiem w logu joba i w panelu Rondo (https://app.workwithrondo.com).
 
-## Instalacja w projekcie
+## Instalacja — GitHub
 
 1. **Sekrety repozytorium** (Settings → Secrets and variables → Actions → New repository secret), wartości z panelu
    Rondo, strona licencji:
@@ -20,13 +20,30 @@ Workflow do dołączenia w projektach na GitHubie: skan obecności artefaktów [
        secrets: inherit
    ```
 
+## Instalacja — GitLab
+
+1. **Zmienne CI** (Settings → CI/CD → Variables, najlepiej na poziomie grupy), wartości z panelu Rondo, strona licencji:
+   - `RONDO_LICENSE` — token licencji (*Masked*),
+   - `DOCKER_AUTH_CONFIG` — JSON logowania do `registry.workwithrondo.com` (GitLab nie zamaskuje JSON-a).
+2. **`include`** w `.gitlab-ci.yml` projektu — runner z executorem docker:
+
+   ```yaml
+   include:
+     - remote: 'https://raw.githubusercontent.com/michalasobczak/workwithrondo/v1/gitlab/rondo.gitlab-ci.yml'
+   ```
+
+   Runner z executorem shell (z dockerem): `gitlab/rondo.shell.gitlab-ci.yml`.
+
+GitLab pobiera szablon z GitHuba przy tworzeniu pipeline'u: serwer GitLaba potrzebuje dostępu do
+`raw.githubusercontent.com`, a gdy GitHub nie odpowiada, pipeline nie powstanie.
+
 ## Zachowanie
 
 - Job nigdy nie blokuje pipeline'u; braki artefaktów to obserwacja, nie błąd.
 - Bez `RONDO_DOCKER_AUTH_CONFIG` (np. pull request z forka) — ostrzeżenie, skan pominięty.
   Bez `RONDO_LICENSE` — wynik tylko w logu.
 - Artefakt `rondo-scan` (JSON skanu) — 30 dni.
-- Wyłączenie w projekcie: zmienna repozytorium `RONDO_DISABLED` = `true`.
+- Wyłączenie w projekcie: zmienna `RONDO_DISABLED` = `true` (GitHub: zmienna repozytorium, GitLab: zmienna CI).
 
 ## Bezpieczeństwo i prywatność
 

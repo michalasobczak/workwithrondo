@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.0] — 2026-11-12
+
+### Added
+- Szablony GitLab CI do `include: remote`: `gitlab/rondo.gitlab-ci.yml` (executor docker) i
+  `gitlab/rondo.shell.gitlab-ci.yml` (executor shell), obraz `rondo:0.5` — przeniesione z rondo-platform.
+
 ## [1.0.0] — 2026-11-11
 
 ### Added

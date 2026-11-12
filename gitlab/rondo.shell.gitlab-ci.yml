@@ -28,7 +28,7 @@ rondo:
       run_rondo version
       run_rondo scan --json /repo > rondo-scan.json
       docker run --rm --user 65532:65532 -v "$CI_PROJECT_DIR:/repo:ro" \
-        -e RONDO_LICENSE -e RONDO_API_URL -e RONDO_AI_TOKEN -e RONDO_AI_PROVIDER -e RONDO_AI_MODEL -e RONDO_AI_URL -e CI_SERVER_URL -e CI_PROJECT_ID -e CI_PROJECT_NAMESPACE -e CI_PROJECT_PATH \
+        -e RONDO_LICENSE -e RONDO_API_URL -e RONDO_AI_TOKEN -e RONDO_AI_PROVIDER -e RONDO_AI_MODEL -e RONDO_AI_URL -e CI_SERVER_URL -e CI_PROJECT_ID -e CI_PROJECT_NAMESPACE -e CI_PROJECT_PATH -e CI_PROJECT_TITLE \
         -e CI_COMMIT_REF_NAME -e CI_COMMIT_SHA -e CI_PIPELINE_ID -e CI_JOB_URL -e CI_MERGE_REQUEST_IID \
         "$RONDO_IMAGE" rondo scan --send /repo
   artifacts:

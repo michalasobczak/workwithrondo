@@ -15,7 +15,7 @@ rondo:
   allow_failure: true
   variables:
     GIT_DEPTH: "1"
-    RONDO_IMAGE: registry.workwithrondo.com/rondo/rondo:0.5
+    RONDO_IMAGE: registry.workwithrondo.com/rondo/rondo:0.6
   script:
     - |
       set -eu

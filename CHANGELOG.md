@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.2.0] — 2026-11-12
+- GitLab templates use image `rondo:0.6` (sends the project name).
+
 ## [1.1.2] — 2026-11-12
 - English only.
 

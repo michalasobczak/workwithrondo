@@ -9,7 +9,7 @@
 
 rondo:
   stage: .pre
-  image: registry.workwithrondo.com/rondo/rondo:0.5
+  image: registry.workwithrondo.com/rondo/rondo:0.6
   needs: []
   allow_failure: true
   variables:

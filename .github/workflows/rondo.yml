@@ -1,5 +1,5 @@
 # Rondo — skan obecności artefaktów CDD (README, CHANGELOG, specy, testy) w GitHub Actions; wynik w logu
-# i w panelu Rondo (https://app.workwithrondo.com). Odpowiednik szablonów GitLab CI z rondo-platform (spec 0012).
+# i w panelu Rondo. Odpowiednik szablonów z gitlab/.
 #
 # Użycie w projekcie (.github/workflows/rondo.yml):
 #   name: Rondo
@@ -10,7 +10,7 @@
 #       secrets: inherit
 #
 # Sekrety repozytorium (panel Rondo → klient → licencja):
-#   RONDO_DOCKER_AUTH_CONFIG — pobranie obrazu z registry.workwithrondo.com (robot tylko do odczytu)
+#   RONDO_DOCKER_AUTH_CONFIG — pobranie obrazu (robot tylko do odczytu)
 #   RONDO_LICENSE            — token licencji; wysyłka wyniku do panelu
 # Bez sekretów (np. pull request z forka) job kończy się ostrzeżeniem, bez błędu.
 # Wyłączenie: zmienna repozytorium RONDO_DISABLED = true.

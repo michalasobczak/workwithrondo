@@ -8,7 +8,7 @@
 #
 # Logowanie do Harbora tylko na czas joba: DOCKER_AUTH_CONFIG trafia do tymczasowego DOCKER_CONFIG,
 # usuwanego po skanie; konfiguracja dockera użytkownika runnera nie jest zmieniana.
-# Kontener: bez roota (65532), repo zamontowane tylko do odczytu; sieć tylko przy wysyłce wyniku (api.workwithrondo.com).
+# Kontener: bez roota (65532), repo zamontowane tylko do odczytu; sieć tylko przy wysyłce wyniku.
 # Checki AI: RONDO_AI_TOKEN (klucz klienta u dostawcy); dostawca, model i prompty z panelu Rondo.
 # Kod 3 (job żółty): skan wykonany, ale wynik nie trafił do panelu — powód w logu.
 # Wyłączenie w projekcie: zmienna RONDO_DISABLED = "true". Job nigdy nie blokuje pipeline (allow_failure).

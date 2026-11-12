@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.1] — 2026-11-12
+
+### Changed
+- README skrócone do dwóch fragmentów konfiguracji; bez adresów usług Rondo w README i komentarzach.
+
 ## [1.1.0] — 2026-11-12
 
 ### Added
